@@ -1,0 +1,14 @@
+
+{
+  "name": "student-portal-devops",
+  "version": "1.0.0",
+  "description": "Student Portal with Automated CI/CD using Jenkins and Docker",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
