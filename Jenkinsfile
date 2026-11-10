@@ -38,24 +38,46 @@ pipeline {
             }
         }
 
-        stage('Docker Hub Login') {
-            steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'dockerhub-creds',
-                        usernameVariable: 'DOCKERHUB_USERNAME',
-                        passwordVariable: 'DOCKERHUB_TOKEN'
-                    )
-                ]) {
-                    bat '''
-                        @echo off
-                        echo Logging in to Docker Hub...
-                        echo %DOCKERHUB_TOKEN% | "%DOCKER_EXE%" login --username "%DOCKERHUB_USERNAME%" --password-stdin
-                        if errorlevel 1 exit /b 1
-                    '''
+       
+stage('Docker Hub Login') {
+    steps {
+        script {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKERHUB_USERNAME',
+                    passwordVariable: 'DOCKERHUB_TOKEN'
+                )
+            ]) {
+                def docker = 'C:\\Program Files\\Docker\\Docker\\resources\\bin\\docker.exe'
+
+                def process = [
+                    docker,
+                    'login',
+                    '--username',
+                    env.DOCKERHUB_USERNAME,
+                    '--password-stdin'
+                ].execute()
+
+                process.outputStream.withWriter('UTF-8') {
+                    it.write(env.DOCKERHUB_TOKEN)
+                }
+                process.outputStream.close()
+
+                def output = process.inputStream.text
+                def errors = process.errorStream.text
+                def exitCode = process.waitFor()
+
+                echo output
+                if (exitCode != 0) {
+                    echo errors
+                    error('Docker Hub authentication failed')
                 }
             }
         }
+    }
+}
+
 
         stage('Push to Docker Hub') {
             steps {
